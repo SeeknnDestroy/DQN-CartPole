@@ -29,7 +29,7 @@ The agent is trained using a variant of the Q-learning algorithm that incorporat
 ## Results
 ![Agent Performance](agent_performance.gif)
 
-The trained agent achieved an average reward of 185.08 over 100 test episodes, demonstrating its ability to effectively solve the CartPole-v0 environment.
+The trained agent achieved an average reward of 185.08 over 100 test episodes, demonstrating its ability to effectively solve the CartPole-v1 environment.
 
 ## Dependencies and Requirements
 - PyTorch
@@ -38,6 +38,6 @@ The trained agent achieved an average reward of 185.08 over 100 test episodes, d
 ## Instructions for Running the Code
 1. Clone the repository.
 2. Install the required dependencies.
-3. Run the main script: `python main.py`
+3. Run the cells in the jupyter notebook: `dql-carpole.ipynb`
 
 Feel free to explore and use this project as a starting point for further experimentation with reinforcement learning algorithms and their applications.
