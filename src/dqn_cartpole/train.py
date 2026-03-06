@@ -10,6 +10,7 @@ import torch
 
 from .agent import DQNAgent
 from .config import DQNConfig
+from .evaluate import evaluate_policy
 from .utils import ensure_parent_dir, make_env, resolve_device, rolling_average, set_global_seed, write_json
 
 
@@ -25,6 +26,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--batch-size", type=int, default=defaults.batch_size)
     parser.add_argument("--replay-buffer-size", type=int, default=defaults.replay_buffer_size)
     parser.add_argument("--update-every", type=int, default=defaults.update_every)
+    parser.add_argument("--warmup-steps", type=int, default=defaults.warmup_steps)
+    parser.add_argument("--gradient-clip-norm", type=float, default=defaults.gradient_clip_norm)
     parser.add_argument("--epsilon-start", type=float, default=defaults.epsilon_start)
     parser.add_argument("--epsilon-end", type=float, default=defaults.epsilon_end)
     parser.add_argument("--epsilon-decay", type=float, default=defaults.epsilon_decay)
@@ -32,6 +35,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--success-episode-threshold", type=float, default=defaults.success_episode_threshold)
     parser.add_argument("--moving-average-window", type=int, default=defaults.moving_average_window)
     parser.add_argument("--solved-threshold", type=float, default=defaults.solved_threshold)
+    parser.add_argument("--validation-interval", type=int, default=defaults.validation_interval)
+    parser.add_argument("--validation-episodes", type=int, default=defaults.validation_episodes)
     parser.add_argument("--eval-episodes", type=int, default=defaults.eval_episodes)
     parser.add_argument("--checkpoint-path", type=Path, default=defaults.checkpoint_path)
     parser.add_argument("--metrics-path", type=Path, default=defaults.metrics_path)
@@ -53,6 +58,8 @@ def config_from_args(args: argparse.Namespace) -> DQNConfig:
         batch_size=args.batch_size,
         replay_buffer_size=args.replay_buffer_size,
         update_every=args.update_every,
+        warmup_steps=args.warmup_steps,
+        gradient_clip_norm=args.gradient_clip_norm,
         epsilon_start=args.epsilon_start,
         epsilon_end=args.epsilon_end,
         epsilon_decay=args.epsilon_decay,
@@ -60,6 +67,8 @@ def config_from_args(args: argparse.Namespace) -> DQNConfig:
         success_episode_threshold=args.success_episode_threshold,
         moving_average_window=args.moving_average_window,
         solved_threshold=args.solved_threshold,
+        validation_interval=args.validation_interval,
+        validation_episodes=args.validation_episodes,
         eval_episodes=args.eval_episodes,
         checkpoint_path=args.checkpoint_path,
         metrics_path=args.metrics_path,
@@ -96,8 +105,11 @@ def train(config: DQNConfig) -> dict[str, Any]:
     episode_rewards: list[float] = []
     moving_averages: list[float] = []
     losses: list[float] = []
+    validation_history: list[dict[str, Any]] = []
     epsilon = config.epsilon_start
     best_moving_average = float("-inf")
+    best_validation_reward = float("-inf")
+    best_checkpoint_episode: int | None = None
 
     for episode in range(1, config.episodes + 1):
         state, _ = env.reset(seed=config.seed + episode)
@@ -120,20 +132,54 @@ def train(config: DQNConfig) -> dict[str, Any]:
         moving_averages.append(moving_average)
         epsilon = max(config.epsilon_end, epsilon * config.epsilon_decay)
 
-        if moving_average >= best_moving_average:
+        if moving_average > best_moving_average:
             best_moving_average = moving_average
-            save_checkpoint(
-                config.checkpoint_path,
-                agent,
-                config,
+
+        should_validate = (
+            episode % config.validation_interval == 0 or episode == config.episodes
+        )
+        if should_validate:
+            validation_metrics = evaluate_policy(
+                agent=agent,
+                environment_id=config.environment_id,
+                episodes=config.validation_episodes,
+                seed=config.seed + 10_000 + episode,
+                success_episode_threshold=config.success_episode_threshold,
+                solved_threshold=config.solved_threshold,
+            )
+            validation_history.append(
                 {
-                    "checkpoint_type": "best",
+                    "episode": episode,
+                    "mean_reward": validation_metrics["mean_reward"],
+                    "std_reward": validation_metrics["std_reward"],
+                    "success_rate": validation_metrics["success_rate"],
+                }
+            )
+            print(
+                f"Validation @ episode {episode:04d} | mean={validation_metrics['mean_reward']:.1f} "
+                f"| std={validation_metrics['std_reward']:.1f} "
+                f"| success_rate={validation_metrics['success_rate']:.2%}"
+            )
+
+            if validation_metrics["mean_reward"] >= best_validation_reward:
+                best_validation_reward = validation_metrics["mean_reward"]
+                best_checkpoint_episode = episode
+                checkpoint_summary = {
+                    "checkpoint_type": "best_validation",
                     "episode": episode,
                     "episode_reward": total_reward,
                     "moving_average_reward": moving_average,
+                    "validation_mean_reward": validation_metrics["mean_reward"],
+                    "validation_std_reward": validation_metrics["std_reward"],
+                    "validation_success_rate": validation_metrics["success_rate"],
                     "epsilon": epsilon,
-                },
-            )
+                }
+                save_checkpoint(
+                    config.checkpoint_path,
+                    agent,
+                    config,
+                    checkpoint_summary,
+                )
 
         if episode == 1 or episode % config.log_every == 0 or episode == config.episodes:
             print(
@@ -153,10 +199,13 @@ def train(config: DQNConfig) -> dict[str, Any]:
         "moving_average_rewards": moving_averages,
         "best_episode_reward": max(episode_rewards),
         "best_moving_average_reward": best_moving_average,
+        "best_validation_reward": best_validation_reward,
+        "best_checkpoint_episode": best_checkpoint_episode,
         "mean_reward": mean(episode_rewards),
         "final_epsilon": epsilon,
         "loss_count": len(losses),
         "last_loss": losses[-1] if losses else None,
+        "validation_history": validation_history,
         "checkpoint_path": str(config.checkpoint_path),
     }
     write_json(config.metrics_path, metrics)

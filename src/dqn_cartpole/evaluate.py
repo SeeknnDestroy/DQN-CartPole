@@ -5,6 +5,7 @@ from pathlib import Path
 from statistics import mean, pstdev
 from typing import Any
 
+import numpy as np
 import torch
 
 from .agent import DQNAgent
@@ -36,6 +37,8 @@ def load_agent(checkpoint_path: Path, device: torch.device) -> tuple[DQNAgent, D
         batch_size=checkpoint_config["batch_size"],
         replay_buffer_size=checkpoint_config["replay_buffer_size"],
         update_every=checkpoint_config["update_every"],
+        warmup_steps=checkpoint_config["warmup_steps"],
+        gradient_clip_norm=checkpoint_config["gradient_clip_norm"],
         epsilon_start=checkpoint_config["epsilon_start"],
         epsilon_end=checkpoint_config["epsilon_end"],
         epsilon_decay=checkpoint_config["epsilon_decay"],
@@ -43,6 +46,8 @@ def load_agent(checkpoint_path: Path, device: torch.device) -> tuple[DQNAgent, D
         success_episode_threshold=checkpoint_config["success_episode_threshold"],
         moving_average_window=checkpoint_config["moving_average_window"],
         solved_threshold=checkpoint_config["solved_threshold"],
+        validation_interval=checkpoint_config["validation_interval"],
+        validation_episodes=checkpoint_config["validation_episodes"],
         eval_episodes=checkpoint_config["eval_episodes"],
         checkpoint_path=Path(checkpoint_config["checkpoint_path"]),
         metrics_path=Path(checkpoint_config["metrics_path"]),
@@ -63,18 +68,18 @@ def load_agent(checkpoint_path: Path, device: torch.device) -> tuple[DQNAgent, D
     return agent, config
 
 
-def evaluate_checkpoint(
-    checkpoint_path: Path,
+def evaluate_policy(
+    agent: DQNAgent,
+    environment_id: str,
     episodes: int,
     seed: int,
-    device_name: str = "auto",
-    metrics_path: Path | None = None,
+    success_episode_threshold: float,
+    solved_threshold: float,
+    render_mode: str | None = None,
 ) -> dict[str, Any]:
-    set_global_seed(seed)
-    device = resolve_device(device_name)
-    agent, config = load_agent(checkpoint_path, device)
-    env = make_env(config.environment_id, seed)
+    env = make_env(environment_id, seed, render_mode=render_mode)
     rewards: list[float] = []
+    rendered_frames: list[np.ndarray] = []
 
     for episode in range(episodes):
         state, _ = env.reset(seed=seed + episode)
@@ -82,6 +87,8 @@ def evaluate_checkpoint(
         done = False
 
         while not done:
+            if render_mode == "rgb_array":
+                rendered_frames.append(env.render())
             action = agent.act(state, epsilon=0.0)
             next_state, reward, terminated, truncated, _ = env.step(action)
             done = terminated or truncated
@@ -93,17 +100,42 @@ def evaluate_checkpoint(
     env.close()
 
     metrics = {
-        "checkpoint_path": str(checkpoint_path),
         "episodes": episodes,
         "mean_reward": mean(rewards),
         "std_reward": pstdev(rewards) if len(rewards) > 1 else 0.0,
         "min_reward": min(rewards),
         "max_reward": max(rewards),
-        "success_rate": sum(reward >= config.success_episode_threshold for reward in rewards) / len(rewards),
-        "success_episode_threshold": config.success_episode_threshold,
-        "solved": mean(rewards) >= config.solved_threshold,
-        "solved_threshold": config.solved_threshold,
+        "success_rate": sum(reward >= success_episode_threshold for reward in rewards) / len(rewards),
+        "success_episode_threshold": success_episode_threshold,
+        "solved": mean(rewards) >= solved_threshold,
+        "solved_threshold": solved_threshold,
         "episode_rewards": rewards,
+    }
+    if render_mode == "rgb_array":
+        metrics["frames"] = rendered_frames
+    return metrics
+
+
+def evaluate_checkpoint(
+    checkpoint_path: Path,
+    episodes: int,
+    seed: int,
+    device_name: str = "auto",
+    metrics_path: Path | None = None,
+) -> dict[str, Any]:
+    set_global_seed(seed)
+    device = resolve_device(device_name)
+    agent, config = load_agent(checkpoint_path, device)
+    metrics = {
+        "checkpoint_path": str(checkpoint_path),
+        **evaluate_policy(
+            agent=agent,
+            environment_id=config.environment_id,
+            episodes=episodes,
+            seed=seed,
+            success_episode_threshold=config.success_episode_threshold,
+            solved_threshold=config.solved_threshold,
+        ),
     }
     if metrics_path is not None:
         write_json(metrics_path, metrics)

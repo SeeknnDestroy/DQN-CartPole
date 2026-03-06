@@ -34,7 +34,7 @@ def test_training_and_evaluation_cli(tmp_path: Path) -> None:
         "-m",
         "dqn_cartpole.train",
         "--episodes",
-        "3",
+        "4",
         "--max-steps",
         "50",
         "--batch-size",
@@ -43,9 +43,15 @@ def test_training_and_evaluation_cli(tmp_path: Path) -> None:
         "32",
         "--update-every",
         "1",
+        "--warmup-steps",
+        "0",
         "--hidden-sizes",
         "16",
         "16",
+        "--validation-interval",
+        "2",
+        "--validation-episodes",
+        "2",
         "--log-every",
         "1",
         "--checkpoint-path",
@@ -59,8 +65,10 @@ def test_training_and_evaluation_cli(tmp_path: Path) -> None:
     assert train_metrics_path.exists()
 
     training_metrics = json.loads(train_metrics_path.read_text())
-    assert training_metrics["episodes_completed"] == 3
-    assert len(training_metrics["episode_rewards"]) == 3
+    assert training_metrics["episodes_completed"] == 4
+    assert len(training_metrics["episode_rewards"]) == 4
+    assert len(training_metrics["validation_history"]) == 2
+    assert training_metrics["best_checkpoint_episode"] in {2, 4}
 
     evaluate_result = run_module(
         "-m",
