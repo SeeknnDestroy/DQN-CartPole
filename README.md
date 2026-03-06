@@ -58,7 +58,7 @@ python -m pip install -r requirements.txt
 
 ```bash
 uv run python -m dqn_cartpole.train \
-  --episodes 300 \
+  --episodes 1000 \
   --checkpoint-path artifacts/checkpoints/cartpole_dqn.pt \
   --metrics-path artifacts/train_metrics.json
 ```
@@ -87,7 +87,37 @@ Evaluation reports:
 - mean reward
 - reward standard deviation
 - per-episode rewards
-- success rate against the CartPole solved threshold
+- success rate for episodes with reward >= 200
+- whether the mean evaluation reward reaches the official solved threshold
+
+## Results
+
+Benchmarks below were generated with:
+
+- 1000 training episodes per run
+- 100 evaluation episodes per run
+- seeds `7`, `17`, and `27`
+
+### Baseline
+
+| Variant | Mean eval reward | Std across seeds | Mean success rate | Mean best moving avg |
+| --- | ---: | ---: | ---: | ---: |
+| default | 166.17 | 33.12 | 20.00% | 173.07 |
+
+### Epsilon decay comparison
+
+| Variant | Mean eval reward | Std across seeds | Mean success rate | Mean best moving avg |
+| --- | ---: | ---: | ---: | ---: |
+| epsilon_decay=0.995 | 166.17 | 33.12 | 20.00% | 173.07 |
+| epsilon_decay=0.99 | 140.46 | 98.95 | 32.33% | 140.97 |
+
+Takeaway: `epsilon_decay=0.995` is the better default here because it gives the stronger mean reward with much lower cross-seed variance. The faster decay (`0.99`) occasionally produces a very strong run, but it is materially less reliable.
+
+Raw summaries:
+
+- [results/benchmark_report.md](results/benchmark_report.md)
+- [results/baseline_summary.json](results/baseline_summary.json)
+- [results/epsilon_decay_comparison.json](results/epsilon_decay_comparison.json)
 
 ## Design notes
 
@@ -109,6 +139,12 @@ uv run pytest
 ```
 
 If you used `venv`, run `pytest` after activating `.venv`.
+
+Regenerate the benchmark summaries with:
+
+```bash
+uv run python scripts/run_benchmark_suite.py
+```
 
 ## Demo notebook
 

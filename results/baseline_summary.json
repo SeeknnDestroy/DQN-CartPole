@@ -1,0 +1,50 @@
+{
+  "study": "baseline",
+  "train_episodes": 1000,
+  "eval_episodes": 100,
+  "seeds": [
+    7,
+    17,
+    27
+  ],
+  "variants": [
+    {
+      "name": "default",
+      "runs": [
+        {
+          "seed": 7,
+          "train_metrics_path": "artifacts/benchmark_suite/baseline/default/seed_7/train_metrics.json",
+          "eval_metrics_path": "artifacts/benchmark_suite/baseline/default/seed_7/eval_metrics.json",
+          "best_moving_average_reward": 195.15,
+          "eval_mean_reward": 207.98,
+          "eval_std_reward": 25.649163729057523,
+          "eval_success_rate": 0.57
+        },
+        {
+          "seed": 17,
+          "train_metrics_path": "artifacts/benchmark_suite/baseline/default/seed_17/train_metrics.json",
+          "eval_metrics_path": "artifacts/benchmark_suite/baseline/default/seed_17/eval_metrics.json",
+          "best_moving_average_reward": 193.3,
+          "eval_mean_reward": 163.53,
+          "eval_std_reward": 16.64659424627152,
+          "eval_success_rate": 0.03
+        },
+        {
+          "seed": 27,
+          "train_metrics_path": "artifacts/benchmark_suite/baseline/default/seed_27/train_metrics.json",
+          "eval_metrics_path": "artifacts/benchmark_suite/baseline/default/seed_27/eval_metrics.json",
+          "best_moving_average_reward": 130.75,
+          "eval_mean_reward": 126.99,
+          "eval_std_reward": 4.742351737271288,
+          "eval_success_rate": 0.0
+        }
+      ],
+      "aggregate": {
+        "mean_eval_reward": 166.16666666666666,
+        "std_eval_reward": 33.11655208837753,
+        "mean_success_rate": 0.19999999999999998,
+        "mean_best_moving_average_reward": 173.06666666666666
+      }
+    }
+  ]
+}
