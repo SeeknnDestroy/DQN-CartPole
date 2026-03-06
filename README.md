@@ -39,18 +39,31 @@ notebooks/
 
 ### 1. Install
 
+Recommended: use `uv`.
+
 ```bash
+uv sync --extra test
+```
+
+If you prefer standard library tooling, use `venv`:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
 python -m pip install -r requirements.txt
 ```
 
 ### 2. Train
 
 ```bash
-python -m dqn_cartpole.train \
+uv run python -m dqn_cartpole.train \
   --episodes 300 \
   --checkpoint-path artifacts/checkpoints/cartpole_dqn.pt \
   --metrics-path artifacts/train_metrics.json
 ```
+
+If you used `venv`, run the same command after activating `.venv`, without `uv run`.
 
 Training writes:
 
@@ -61,11 +74,13 @@ Training writes:
 ### 3. Evaluate
 
 ```bash
-python -m dqn_cartpole.evaluate \
+uv run python -m dqn_cartpole.evaluate \
   --checkpoint artifacts/checkpoints/cartpole_dqn.pt \
   --episodes 100 \
   --metrics-path artifacts/eval_metrics.json
 ```
+
+If you used `venv`, run the same command after activating `.venv`, without `uv run`.
 
 Evaluation reports:
 
@@ -90,8 +105,10 @@ Evaluation reports:
 Run the test suite with:
 
 ```bash
-pytest
+uv run pytest
 ```
+
+If you used `venv`, run `pytest` after activating `.venv`.
 
 ## Demo notebook
 
