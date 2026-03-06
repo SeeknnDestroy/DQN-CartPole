@@ -29,6 +29,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--epsilon-end", type=float, default=defaults.epsilon_end)
     parser.add_argument("--epsilon-decay", type=float, default=defaults.epsilon_decay)
     parser.add_argument("--hidden-sizes", type=int, nargs=2, metavar=("H1", "H2"), default=defaults.hidden_sizes)
+    parser.add_argument("--success-episode-threshold", type=float, default=defaults.success_episode_threshold)
     parser.add_argument("--moving-average-window", type=int, default=defaults.moving_average_window)
     parser.add_argument("--solved-threshold", type=float, default=defaults.solved_threshold)
     parser.add_argument("--eval-episodes", type=int, default=defaults.eval_episodes)
@@ -56,6 +57,7 @@ def config_from_args(args: argparse.Namespace) -> DQNConfig:
         epsilon_end=args.epsilon_end,
         epsilon_decay=args.epsilon_decay,
         hidden_sizes=tuple(args.hidden_sizes),
+        success_episode_threshold=args.success_episode_threshold,
         moving_average_window=args.moving_average_window,
         solved_threshold=args.solved_threshold,
         eval_episodes=args.eval_episodes,

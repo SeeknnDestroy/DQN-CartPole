@@ -9,7 +9,7 @@ from typing import Any
 class DQNConfig:
     environment_id: str = "CartPole-v1"
     seed: int = 7
-    episodes: int = 300
+    episodes: int = 1000
     max_steps: int = 500
     learning_rate: float = 1e-3
     gamma: float = 0.99
@@ -21,6 +21,7 @@ class DQNConfig:
     epsilon_end: float = 0.01
     epsilon_decay: float = 0.995
     hidden_sizes: tuple[int, int] = (64, 64)
+    success_episode_threshold: float = 200.0
     moving_average_window: int = 20
     solved_threshold: float = 475.0
     eval_episodes: int = 20

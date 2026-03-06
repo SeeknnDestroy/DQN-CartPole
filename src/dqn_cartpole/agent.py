@@ -27,6 +27,7 @@ class DQNAgent:
 
         self.qnetwork_local = QNetwork(state_size, action_size, config.hidden_sizes).to(device)
         self.qnetwork_target = QNetwork(state_size, action_size, config.hidden_sizes).to(device)
+        self.qnetwork_target.load_state_dict(self.qnetwork_local.state_dict())
         self.optimizer = optim.Adam(self.qnetwork_local.parameters(), lr=config.learning_rate)
         self.memory = ReplayBuffer(
             buffer_size=config.replay_buffer_size,
