@@ -1,43 +1,108 @@
-# Deep Q-Network (DQN) for CartPole
+# DQN CartPole
 
-## Overview
-This project demonstrates the implementation of a Deep Q-Network (DQN) to solve the CartPole-v1 environment from OpenAI Gym. By using reinforcement learning and PyTorch, this project showcases a deep understanding of machine learning techniques and their applications.
+Minimal, reproducible Deep Q-Network training and evaluation for `CartPole-v1` using PyTorch and Gymnasium.
 
-## Table of Contents
-- [Technologies Used](#technologies-used)
-- [Problem Statement](#problem-statement)
-- [Solution Approach](#solution-approach)
-- [Results](#results)
-- [Dependencies and Requirements](#dependencies-and-requirements)
-- [Instructions for Running the Code](#instructions-for-running-the-code)
+This project started as a notebook experiment and was refactored into a small RL codebase with stable entrypoints, deterministic seeding, tests, and artifact generation. The goal is not to over-engineer CartPole; it is to show clean ML implementation discipline on a well-known benchmark.
 
-## Technologies Used
-- PyTorch
-- OpenAI Gym
-
-## Problem Statement
-The goal of this project is to train a DQN agent to balance a pole on a cart for as long as possible. This classic control problem serves as a benchmark to evaluate the performance of reinforcement learning algorithms.
-
-## Solution Approach
-The solution uses a DQN agent with experience replay and target network. The key components of the project are:
-- Q-Network: A neural network that approximates the action-value function.
-- Replay Buffer: A data structure to store and sample past experiences for training.
-- DQNAgent: A class that defines the agent's behavior, including action selection and learning.
-
-The agent is trained using a variant of the Q-learning algorithm that incorporates deep learning for function approximation.
-
-## Results
 ![Agent Performance](agent_performance.gif)
 
-The trained agent achieved an average reward of 185.08 over 100 test episodes, demonstrating its ability to effectively solve the CartPole-v1 environment.
+## Why this repo exists
 
-## Dependencies and Requirements
-- PyTorch
-- OpenAI Gym
+`CartPole-v1` is a small but useful benchmark for demonstrating reinforcement learning fundamentals:
 
-## Instructions for Running the Code
-1. Clone the repository.
-2. Install the required dependencies.
-3. Run the cells in the jupyter notebook: `dql-carpole.ipynb`
+- value-function approximation with a neural network
+- experience replay
+- target network updates
+- epsilon-greedy exploration
+- reproducible training and evaluation loops
 
-Feel free to explore and use this project as a starting point for further experimentation with reinforcement learning algorithms and their applications.
+For a portfolio project, the value is less about the benchmark itself and more about whether the implementation is coherent, runnable, and easy to review.
+
+## Project structure
+
+```text
+src/dqn_cartpole/
+  agent.py         DQN policy, learning step, target updates
+  config.py        typed configuration for training/eval
+  evaluate.py      checkpoint loading and deterministic evaluation CLI
+  model.py         Q-network definition
+  replay_buffer.py replay sampling utilities
+  train.py         training loop and checkpoint/metrics writing
+  utils.py         seeding, environment creation, JSON helpers
+tests/
+  unit + smoke tests for replay, agent, and CLI workflows
+notebooks/
+  demo notebook that imports package code instead of defining it
+```
+
+## Quickstart
+
+### 1. Install
+
+```bash
+python -m pip install -r requirements.txt
+```
+
+### 2. Train
+
+```bash
+python -m dqn_cartpole.train \
+  --episodes 300 \
+  --checkpoint-path artifacts/checkpoints/cartpole_dqn.pt \
+  --metrics-path artifacts/train_metrics.json
+```
+
+Training writes:
+
+- the best checkpoint observed so far at `artifacts/checkpoints/cartpole_dqn.pt`
+- machine-readable training metrics at `artifacts/train_metrics.json`
+- console logs with episode reward, moving average reward, and epsilon
+
+### 3. Evaluate
+
+```bash
+python -m dqn_cartpole.evaluate \
+  --checkpoint artifacts/checkpoints/cartpole_dqn.pt \
+  --episodes 100 \
+  --metrics-path artifacts/eval_metrics.json
+```
+
+Evaluation reports:
+
+- mean reward
+- reward standard deviation
+- per-episode rewards
+- success rate against the CartPole solved threshold
+
+## Design notes
+
+- The training loop has a single source of truth: `agent.step(...)` owns replay insertion and learning cadence.
+- The repo uses `gymnasium` instead of legacy `gym` and handles `terminated` / `truncated` correctly.
+- Checkpoints store model weights, optimizer state, config, and summary metadata so evaluation can run independently from the training process.
+- Tests focus on RL plumbing and workflow credibility rather than benchmark score chasing.
+
+## Reproducibility
+
+- Python, NumPy, Torch, and environment seeding are set explicitly.
+- The default artifact paths are stable and suitable for CI smoke tests.
+- `pytest` covers unit-level tensor shapes and a small end-to-end train/evaluate run.
+
+Run the test suite with:
+
+```bash
+pytest
+```
+
+## Demo notebook
+
+The original notebook-heavy structure has been reduced to a thin demo notebook that imports the package code:
+
+- [notebooks/cartpole_dqn_demo.ipynb](notebooks/cartpole_dqn_demo.ipynb)
+
+Use it for exploration or quick inspection after installing the package in editable mode.
+
+## Current limitations
+
+- This is intentionally scoped to a single classic-control environment.
+- There is no experiment tracker, hyperparameter sweeper, or GPU-specific optimization layer.
+- Training variance still exists because DQN on short runs is sensitive to seed and budget; the repo records metrics rather than hiding that reality.

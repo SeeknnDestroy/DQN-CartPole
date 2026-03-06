@@ -1,0 +1,7 @@
+__pycache__/
+.pytest_cache/
+.coverage
+.venv/
+artifacts/
+*.egg-info/
+.ipynb_checkpoints/

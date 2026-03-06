@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dqn-cartpole"
+version = "0.1.0"
+description = "Reproducible Deep Q-Network training and evaluation for CartPole-v1."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "gymnasium[classic-control]>=1.0,<2.0",
+  "numpy>=1.26,<3.0",
+  "torch>=2.6,<3.0",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.0",
+]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+asyncio_default_fixture_loop_scope = "function"
