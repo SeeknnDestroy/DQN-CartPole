@@ -1,5 +1,7 @@
 # DQN CartPole
 
+[![CI](https://github.com/SeeknnDestroy/DQN-CartPole/actions/workflows/ci.yml/badge.svg)](https://github.com/SeeknnDestroy/DQN-CartPole/actions/workflows/ci.yml)
+
 Minimal, reproducible Deep Q-Network training and evaluation for `CartPole-v1` using PyTorch and Gymnasium.
 
 This project started as a notebook experiment and was refactored into a small RL codebase with stable entrypoints, deterministic seeding, tests, and artifact generation. The goal is not to over-engineer CartPole; it is to show clean ML implementation discipline on a well-known benchmark.
