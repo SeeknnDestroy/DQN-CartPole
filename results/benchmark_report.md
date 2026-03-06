@@ -1,23 +1,23 @@
 # Benchmark Report
 
-- Training episodes per run: 1000
+- Baseline training episodes per run: 1000
+- Chosen default training episodes per run: 1500
 - Evaluation episodes per run: 100
 - Seeds: 7, 17, 27
 
 ## Baseline
 
-| Variant | Mean eval reward | Std across seeds | Mean success rate | Mean best moving avg |
+| Variant | Mean eval reward | Std across seeds | Mean success rate | Mean best validation reward |
 | --- | ---: | ---: | ---: | ---: |
-| default | 166.17 | 33.12 | 20.00% | 173.07 |
+| episodes_1000 | 460.78 | 55.46 | 99.33% | 472.47 |
 
-## Epsilon Decay Comparison
+## Chosen Default
 
-| Variant | Mean eval reward | Std across seeds | Mean success rate | Mean best moving avg |
-| --- | ---: | ---: | ---: | ---: |
-| epsilon_decay_0.995 | 166.17 | 33.12 | 20.00% | 173.07 |
-| epsilon_decay_0.99 | 140.46 | 98.95 | 32.33% | 140.97 |
+| Variant | Mean eval reward | Std across seeds | Mean success rate | Mean best validation reward | Solved all seeds |
+| --- | ---: | ---: | ---: | ---: | --- |
+| episodes_1500 | 500.00 | 0.00 | 100.00% | 500.00 | yes |
 
-## Takeaway
+## Chosen Default Rationale
 
-This comparison changes only the epsilon decay rate while keeping the rest of the training configuration fixed.
-Use the higher mean evaluation reward and lower cross-seed variance together to decide which default feels more reliable.
+The published default starts from the stabilized DQN bundle and targets 1500 training episodes because the 1000-episode baseline is still too inconsistent across seeds.
+No fallback beyond the selected variant is needed because all benchmark seeds reached the solved threshold under deterministic evaluation.

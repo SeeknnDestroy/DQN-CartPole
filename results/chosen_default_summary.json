@@ -1,0 +1,102 @@
+{
+  "attempts": [
+    {
+      "name": "episodes_1500",
+      "runs": [
+        {
+          "seed": 7,
+          "train_metrics_path": "artifacts/benchmark_suite/chosen_default/episodes_1500/seed_7/train_metrics.json",
+          "eval_metrics_path": "artifacts/benchmark_suite/chosen_default/episodes_1500/seed_7/eval_metrics.json",
+          "best_moving_average_reward": 500.0,
+          "best_validation_reward": 500.0,
+          "best_checkpoint_episode": 1500,
+          "eval_mean_reward": 500.0,
+          "eval_std_reward": 0.0,
+          "eval_success_rate": 1.0,
+          "solved": true
+        },
+        {
+          "seed": 17,
+          "train_metrics_path": "artifacts/benchmark_suite/chosen_default/episodes_1500/seed_17/train_metrics.json",
+          "eval_metrics_path": "artifacts/benchmark_suite/chosen_default/episodes_1500/seed_17/eval_metrics.json",
+          "best_moving_average_reward": 500.0,
+          "best_validation_reward": 500.0,
+          "best_checkpoint_episode": 1500,
+          "eval_mean_reward": 500.0,
+          "eval_std_reward": 0.0,
+          "eval_success_rate": 1.0,
+          "solved": true
+        },
+        {
+          "seed": 27,
+          "train_metrics_path": "artifacts/benchmark_suite/chosen_default/episodes_1500/seed_27/train_metrics.json",
+          "eval_metrics_path": "artifacts/benchmark_suite/chosen_default/episodes_1500/seed_27/eval_metrics.json",
+          "best_moving_average_reward": 500.0,
+          "best_validation_reward": 500.0,
+          "best_checkpoint_episode": 1500,
+          "eval_mean_reward": 500.0,
+          "eval_std_reward": 0.0,
+          "eval_success_rate": 1.0,
+          "solved": true
+        }
+      ],
+      "aggregate": {
+        "mean_eval_reward": 500.0,
+        "std_eval_reward": 0.0,
+        "mean_success_rate": 1.0,
+        "mean_best_moving_average_reward": 500.0,
+        "mean_best_validation_reward": 500.0,
+        "solved_all_seeds": true
+      }
+    }
+  ],
+  "selected_variant": {
+    "name": "episodes_1500",
+    "runs": [
+      {
+        "seed": 7,
+        "train_metrics_path": "artifacts/benchmark_suite/chosen_default/episodes_1500/seed_7/train_metrics.json",
+        "eval_metrics_path": "artifacts/benchmark_suite/chosen_default/episodes_1500/seed_7/eval_metrics.json",
+        "best_moving_average_reward": 500.0,
+        "best_validation_reward": 500.0,
+        "best_checkpoint_episode": 1500,
+        "eval_mean_reward": 500.0,
+        "eval_std_reward": 0.0,
+        "eval_success_rate": 1.0,
+        "solved": true
+      },
+      {
+        "seed": 17,
+        "train_metrics_path": "artifacts/benchmark_suite/chosen_default/episodes_1500/seed_17/train_metrics.json",
+        "eval_metrics_path": "artifacts/benchmark_suite/chosen_default/episodes_1500/seed_17/eval_metrics.json",
+        "best_moving_average_reward": 500.0,
+        "best_validation_reward": 500.0,
+        "best_checkpoint_episode": 1500,
+        "eval_mean_reward": 500.0,
+        "eval_std_reward": 0.0,
+        "eval_success_rate": 1.0,
+        "solved": true
+      },
+      {
+        "seed": 27,
+        "train_metrics_path": "artifacts/benchmark_suite/chosen_default/episodes_1500/seed_27/train_metrics.json",
+        "eval_metrics_path": "artifacts/benchmark_suite/chosen_default/episodes_1500/seed_27/eval_metrics.json",
+        "best_moving_average_reward": 500.0,
+        "best_validation_reward": 500.0,
+        "best_checkpoint_episode": 1500,
+        "eval_mean_reward": 500.0,
+        "eval_std_reward": 0.0,
+        "eval_success_rate": 1.0,
+        "solved": true
+      }
+    ],
+    "aggregate": {
+      "mean_eval_reward": 500.0,
+      "std_eval_reward": 0.0,
+      "mean_success_rate": 1.0,
+      "mean_best_moving_average_reward": 500.0,
+      "mean_best_validation_reward": 500.0,
+      "solved_all_seeds": true
+    }
+  }
+}

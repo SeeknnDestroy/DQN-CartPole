@@ -4,7 +4,7 @@
 
 Minimal, reproducible Deep Q-Network training and evaluation for `CartPole-v1` using PyTorch and Gymnasium.
 
-This project started as a notebook experiment and was refactored into a small RL codebase with stable entrypoints, deterministic seeding, tests, and artifact generation. The goal is not to over-engineer CartPole; it is to show clean ML implementation discipline on a well-known benchmark.
+This project started as a notebook experiment and was refactored into a small RL codebase with stable entrypoints, deterministic seeding, tests, artifact generation, and a stabilized DQN training loop that solves CartPole reliably across benchmark seeds.
 
 ![Agent Performance](agent_performance.gif)
 
@@ -60,7 +60,7 @@ python -m pip install -r requirements.txt
 
 ```bash
 uv run python -m dqn_cartpole.train \
-  --episodes 1000 \
+  --episodes 1500 \
   --checkpoint-path artifacts/checkpoints/cartpole_dqn.pt \
   --metrics-path artifacts/train_metrics.json
 ```
@@ -69,9 +69,9 @@ If you used `venv`, run the same command after activating `.venv`, without `uv r
 
 Training writes:
 
-- the best checkpoint observed so far at `artifacts/checkpoints/cartpole_dqn.pt`
+- the best validation checkpoint at `artifacts/checkpoints/cartpole_dqn.pt`
 - machine-readable training metrics at `artifacts/train_metrics.json`
-- console logs with episode reward, moving average reward, and epsilon
+- console logs with episode reward, moving average reward, epsilon, and validation summaries
 
 ### 3. Evaluate
 
@@ -97,36 +97,37 @@ Evaluation reports:
 Benchmarks below were generated with:
 
 - 1000 training episodes per run
+- 1500 training episodes per run for the published default
 - 100 evaluation episodes per run
 - seeds `7`, `17`, and `27`
 
 ### Baseline
 
-| Variant | Mean eval reward | Std across seeds | Mean success rate | Mean best moving avg |
+| Variant | Mean eval reward | Std across seeds | Mean success rate | Mean best validation reward |
 | --- | ---: | ---: | ---: | ---: |
-| default | 166.17 | 33.12 | 20.00% | 173.07 |
+| episodes_1000 | 460.78 | 55.46 | 99.33% | 472.47 |
 
-### Epsilon decay comparison
+### Published default
 
-| Variant | Mean eval reward | Std across seeds | Mean success rate | Mean best moving avg |
-| --- | ---: | ---: | ---: | ---: |
-| epsilon_decay=0.995 | 166.17 | 33.12 | 20.00% | 173.07 |
-| epsilon_decay=0.99 | 140.46 | 98.95 | 32.33% | 140.97 |
+| Variant | Mean eval reward | Std across seeds | Mean success rate | Mean best validation reward | Solved all seeds |
+| --- | ---: | ---: | ---: | ---: | --- |
+| episodes_1500 | 500.00 | 0.00 | 100.00% | 500.00 | yes |
 
-Takeaway: `epsilon_decay=0.995` is the better default here because it gives the stronger mean reward with much lower cross-seed variance. The faster decay (`0.99`) occasionally produces a very strong run, but it is materially less reliable.
+Takeaway: the stabilized DQN default keeps the implementation small but moves the repo from “sometimes works” to a consistent solved benchmark. The 1000-episode budget is close, but still misses one benchmark seed; 1500 episodes solves all three.
 
 Raw summaries:
 
 - [results/benchmark_report.md](results/benchmark_report.md)
 - [results/baseline_summary.json](results/baseline_summary.json)
-- [results/epsilon_decay_comparison.json](results/epsilon_decay_comparison.json)
+- [results/chosen_default_summary.json](results/chosen_default_summary.json)
 
 ## Design notes
 
-- The training loop has a single source of truth: `agent.step(...)` owns replay insertion and learning cadence.
+- The training loop has a single source of truth: `agent.step(...)` owns replay insertion, learning cadence, and replay warmup behavior.
+- The learning rule uses Double DQN targets, Huber loss, gradient clipping, and validation-based checkpoint selection to improve stability without turning the project into a larger RL framework.
 - The repo uses `gymnasium` instead of legacy `gym` and handles `terminated` / `truncated` correctly.
 - Checkpoints store model weights, optimizer state, config, and summary metadata so evaluation can run independently from the training process.
-- Tests focus on RL plumbing and workflow credibility rather than benchmark score chasing.
+- Tests cover RL plumbing, validation checkpoint flow, and GIF export in addition to the CLI smoke path.
 
 ## Reproducibility
 
@@ -148,6 +149,14 @@ Regenerate the benchmark summaries with:
 uv run python scripts/run_benchmark_suite.py
 ```
 
+Refresh the demo GIF from a trained checkpoint with:
+
+```bash
+uv run python scripts/export_agent_gif.py \
+  --checkpoint artifacts/benchmark_suite/chosen_default/episodes_1500/seed_7/model.pt \
+  --output agent_performance.gif
+```
+
 ## Demo notebook
 
 The original notebook-heavy structure has been reduced to a thin demo notebook that imports the package code:
@@ -160,4 +169,4 @@ Use it for exploration or quick inspection after installing the package in edita
 
 - This is intentionally scoped to a single classic-control environment.
 - There is no experiment tracker, hyperparameter sweeper, or GPU-specific optimization layer.
-- Training variance still exists because DQN on short runs is sensitive to seed and budget; the repo records metrics rather than hiding that reality.
+- The published default is reliable at the benchmarked seeds, but it still depends on a non-trivial training budget rather than a more advanced RL method family.
